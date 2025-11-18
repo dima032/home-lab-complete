@@ -1,0 +1,43 @@
+global:
+  enabled: true
+  namespace: "vault"
+
+server:
+  serviceAccount:
+    create: true
+    name: "vault-sa"
+    annotations: {}
+  resources:
+    requests:
+      memory: 256Mi
+      cpu: 250m
+    limits:
+      memory: 512Mi
+      cpu: 500m
+  ingress:
+    enabled: true
+    annotations:
+      kubernetes.io/ingress.class: traefik
+      traefik.ingress.kubernetes.io/router.entrypoints: websecure
+      traefik.ingress.kubernetes.io/router.tls: "true"
+    hosts:
+      - host: vault.internal
+        paths:
+          - "/"
+  ha:
+    enabled: false
+    replicas: 1
+  standalone:
+    enabled: true
+    storageClass: local-path
+    size: 5Gi    
+ui:
+  enabled: true
+  
+# --- NEW BLOCK ADDED TO ENABLE THE INJECTOR AND ITS COMPONENTS ---
+injector:
+  enabled: true
+  serviceAccount:
+    create: true
+    name: "vault-agent-injector-sa"
+    annotations: {}
