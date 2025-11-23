@@ -7,7 +7,7 @@ spec:
   selector:
     app: adguard-home
   externalIPs:
-    - "192.168.0.156" # <-- IMPORTANT: Replace with your node's actual local IP
+    - "192.168.0.156"
   ports:
     - protocol: TCP
       port: 80

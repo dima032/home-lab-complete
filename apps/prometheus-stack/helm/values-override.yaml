@@ -1,0 +1,84 @@
+kubeControllerManager:
+  enabled: false
+kubeScheduler:
+  enabled: false
+kubeEtcd:
+  enabled: false
+kubeProxy:
+  enabled: false
+
+grafana:
+  serviceAccount:
+    create: true
+    name: grafana-sa
+  adminPassword: "temporary-password"
+  
+  podAnnotations:
+    vault.hashicorp.com/agent-inject: "true"
+    vault.hashicorp.com/role: "grafana-role"
+    vault.hashicorp.com/agent-inject-secret-admin: "kv/grafana/data/password"
+    vault.hashicorp.com/agent-inject-template-admin: |
+      {{- with secret "kv/grafana/data/password" -}}
+      {{ .Data.data.password }}
+      {{- end }}
+
+  extraContainerEnv:
+      - name: GF_SECURITY_ADMIN_PASSWORD__FILE
+        value: /vault/secrets/admin
+
+  resources:
+    limits:
+      memory: 256Mi
+    requests:
+      cpu: 50m
+      memory: 64Mi
+
+  ingress:
+    enabled: true
+    ingressClassName: traefik
+    annotations:
+      kubernetes.io/ingress.class: traefik
+      traefik.ingress.kubernetes.io/router.entrypoints: websecure 
+      traefik.ingress.kubernetes.io/router.tls: "true"
+    hosts:
+      - grafana.internal
+    path: /
+
+  persistence:
+    enabled: true
+    type: pvc
+    storageClassName: local-path
+    accessModes:
+      - ReadWriteOnce
+    size: 2Gi
+
+prometheus:
+  prometheusSpec:
+    replicas: 1
+    
+    retention: 7d
+    resources:
+      limits:
+        memory: 1Gi
+      requests:
+        cpu: 200m
+        memory: 512Mi
+    
+    storageSpec:
+      volumeClaimTemplate:
+        spec:
+          storageClassName: local-path
+          accessModes: ["ReadWriteOnce"]
+          resources:
+            requests:
+              storage: 10Gi
+
+alertmanager:
+  alertmanagerSpec:
+    replicas: 1
+    resources:
+      limits:
+        memory: 100Mi
+      requests:
+        cpu: 10m
+        memory: 50Mi
