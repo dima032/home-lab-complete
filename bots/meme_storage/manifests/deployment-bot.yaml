@@ -1,0 +1,79 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: meme-storage-deployment
+  namespace: bots
+  labels:
+    app: meme-storage-bot
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: meme-storage-bot
+  template:
+    metadata:
+      labels:
+        app: meme-storage-bot
+      annotations:
+        vault.hashicorp.com/agent-inject: "true"
+        vault.hashicorp.com/agent-pre-populate-only: "true"
+        vault.hashicorp.com/role: "meme-storage-bot-role"
+        vault.hashicorp.com/agent-inject-secret-botsecrets: "kv/meme-storage-bot/data/secret"
+        vault.hashicorp.com/agent-inject-template-botsecrets: |
+          {{- with secret "kv/meme-storage-bot/data/secret" -}}
+          export TELEGRAM_TOKEN="{{ .Data.data.TELEGRAM_TOKEN }}"
+          export ALLOWED_TELEGRAM_IDS="{{ .Data.data.ALLOWED_TELEGRAM_IDS }}"
+          export PUBLIC_URL="{{ .Data.data.PUBLIC_URL }}"
+          export URL_SIGNING_SECRET="{{ .Data.data.URL_SIGNING_SECRET }}"
+          {{- end }}
+    spec:
+      serviceAccountName: meme-storage-sa
+      securityContext:
+        fsGroup: 1000
+        runAsUser: 1000
+        runAsGroup: 1000
+      volumes:
+        - name: meme-storage-data
+          persistentVolumeClaim:
+            claimName: meme-storage-pvc
+      initContainers:
+        - name: fix-permissions
+          image: busybox
+          command: ["sh", "-c", "chown -R 1000:1000 /app"]
+          securityContext:
+            runAsUser: 0
+          volumeMounts:
+            - name: meme-storage-data
+              mountPath: /app
+        - name: make-dirs
+          image: busybox
+          command: ["sh", "-c", "mkdir -p /app/data/memes /app/data/thumbnails /app/data/db"]
+          securityContext:
+            runAsUser: 0
+          volumeMounts:
+            - name: meme-storage-data
+              mountPath: /app/data
+      containers:
+        - name: meme-storage-bot
+          image: dima032398485/meme-storage-bot:latest
+          imagePullPolicy: Always
+          workingDir: /app
+          command: ["/bin/sh", "-c"]
+          args: 
+            - |
+              . /vault/secrets/botsecrets && python3 src/main.py
+          ports:
+            - containerPort: 8000
+          env:
+            - name: HOME
+              value: /app
+          resources:
+            requests:
+              cpu: "256m"
+              memory: "256Mi"
+            limits:
+              cpu: "512m"
+              memory: "512Mi"
+          volumeMounts:
+            - name: meme-storage-data
+              mountPath: /app/data
