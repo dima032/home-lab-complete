@@ -1,0 +1,30 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pvzge-deployment
+  namespace: pvzge
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: pvzge
+  template:
+    metadata:
+      labels:
+        app: pvzge
+    spec:
+      serviceAccountName: pvzge-sa
+      containers:
+        - name: pvzge-container
+          image: gaozih/pvzge:latest
+          imagePullPolicy: Always
+          ports:
+            - name: http
+              containerPort: 80
+          resources:
+            limits:
+              memory: "128Mi"
+              cpu: "128m"
+            requests:
+              memory: "64Mi"
+              cpu: "64m"
