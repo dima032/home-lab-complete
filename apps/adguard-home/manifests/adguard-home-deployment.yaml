@@ -33,7 +33,6 @@ spec:
               protocol: TCP
             - name: dot
               containerPort: 853
-              hostPort: 853
               protocol: TCP
           volumeMounts:
             - name: adguard-home-data
