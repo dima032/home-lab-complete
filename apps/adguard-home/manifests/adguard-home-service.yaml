@@ -6,8 +6,6 @@ metadata:
 spec:
   selector:
     app: adguard-home
-  externalIPs:
-    - "192.168.70.178"
   ports:
     - protocol: TCP
       port: 80
