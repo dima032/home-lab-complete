@@ -70,7 +70,7 @@ spec:
         name: immich-psql-pv
       spec:
         accessModes: [ "ReadWriteOnce" ]
-        storageClassName: local-path
+        storageClassName: local-path-retain
         resources:
           requests:
             storage: 2Gi
