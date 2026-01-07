@@ -5,6 +5,7 @@ metadata:
   namespace: immich
   annotations:
       kubernetes.io.ingress.class: traefik
+      traefik.ingress.kubernetes.io/router.middlewares: immich-strip-cf-headers@kubernetescrd
       traefik.ingress.kubernetes.io/router.entrypoints: websecure 
       traefik.ingress.kubernetes.io/router.tls: "true"
 spec:

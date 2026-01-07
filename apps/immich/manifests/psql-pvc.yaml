@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: immich-lybrary-pvc
+  name: immich-psql-pvc
   namespace: immich
 spec:
   accessModes:
@@ -9,8 +9,8 @@ spec:
   storageClassName: "" # Explicitly set to empty string for static provisioning
   resources:
     requests:
-      storage: 300Gi
+      storage: 2Gi
   selector:
     matchLabels:
-      app: immich
-      volume-type: hostpath-immich-library
+      app: immich-psql
+      volume-type: hostpath-immich-psql

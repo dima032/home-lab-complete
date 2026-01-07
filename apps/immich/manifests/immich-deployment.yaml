@@ -14,12 +14,34 @@ spec:
     metadata:
       labels:
         app: immich-app
+      annotations:
+        vault.hashicorp.com/agent-inject: "true"
+        vault.hashicorp.com/role: "immich-role"
+        vault.hashicorp.com/agent-inject-secret-db.env: "immich/data/postgres"
+        vault.hashicorp.com/agent-inject-template-db.env: |
+          {{- with secret "immich/data/postgres" -}}
+          export DB_USERNAME='{{ .Data.data.postgres_user }}'
+          export DB_PASSWORD='{{ .Data.data.postgres_password }}'
+          export DB_NAME='{{ .Data.data.postgres_db }}'
+          {{- end }}
     spec:
       serviceAccountName: immich-sa
+      initContainers:
+        - name: wait-for-postgres
+          image: postgres:14
+          command:
+            - sh
+            - -c
+            - |
+              until pg_isready -h immich-psql-service -p 5432; do
+                echo "Waiting for postgres..."
+                sleep 2
+              done
       containers:
         - name: immich
           image: ghcr.io/immich-app/immich-server:v2.4.1
           imagePullPolicy: IfNotPresent
+          command: ["/bin/sh", "-c", ". /vault/secrets/db.env && exec node /usr/src/app/server/dist/main.js"]
           ports:
             - containerPort: 2283
               name: http
@@ -28,25 +50,12 @@ spec:
           env:
             - name: IMMICH_MEDIA_LOCATION
               value: /mnt/data/immich
+            - name: UPLOAD_LOCATION
+              value: /mnt/data/immich
             - name: MACHINE_LEARNING_URL
               value: immich-ml-service
             - name: DB_HOSTNAME
               value: immich-psql-service
-            - name: DB_USERNAME
-              valueFrom:
-                secretKeyRef:
-                  name: immich-secrets
-                  key: postgres_user
-            - name: DB_PASSWORD
-              valueFrom:
-                secretKeyRef:
-                  name: immich-secrets
-                  key: postgres_password
-            - name: DB_NAME
-              valueFrom:
-                secretKeyRef:
-                  name: immich-secrets
-                  key: postgres_db
             - name: REDIS_HOSTNAME
               value: immich-redis-service
           readinessProbe:

@@ -13,7 +13,18 @@ spec:
     metadata:
       labels:
         app: immich-psql
+      annotations:
+        vault.hashicorp.com/agent-inject: "true"
+        vault.hashicorp.com/role: "immich-role"
+        vault.hashicorp.com/agent-inject-secret-postgres.env: "immich/data/postgres"
+        vault.hashicorp.com/agent-inject-template-postgres.env: |
+          {{- with secret "immich/data/postgres" -}}
+          export POSTGRES_USER='{{ .Data.data.postgres_user }}'
+          export POSTGRES_PASSWORD='{{ .Data.data.postgres_password }}'
+          export POSTGRES_DB='{{ .Data.data.postgres_db }}'
+          {{- end }}
     spec:
+      serviceAccountName: immich-sa
       # ensure files are group-writable for the postgres process
       securityContext:
         fsGroup: 999
@@ -27,37 +38,19 @@ spec:
             - -c
             - |
               # numeric 999:999 should match the postgres image UID:GID; adjust if needed
-              chown -R 999:999 /var/lib/postgresql || true
-              chmod -R 0700 /var/lib/postgresql || true
+              chown -R 999:999 /var/lib/postgresql/data
+              chmod -R 0700 /var/lib/postgresql/data
           securityContext:
             runAsUser: 0
           volumeMounts:
             - name: immich-psql-pv
-              mountPath: /var/lib/postgresql
+              mountPath: /var/lib/postgresql/data
       containers:
         - name: immich-psql
           image: ghcr.io/immich-app/postgres:14-vectorchord0.4.3-pgvectors0.2.0@sha256:bcf63357191b76a916ae5eb93464d65c07511da41e3bf7a8416db519b40b1c23
+          command: ["/bin/sh", "-c", ". /vault/secrets/postgres.env && exec /usr/local/bin/docker-entrypoint.sh postgres -c 'max_connections=200' -c 'shared_preload_libraries=vchord'"]
           ports:
               - containerPort: 5432
-          env:
-            - name: POSTGRES_USER
-              valueFrom:
-                secretKeyRef:
-                  name: immich-secrets
-                  key: postgres_user
-            - name: POSTGRES_PASSWORD
-              valueFrom:
-                secretKeyRef:
-                  name: immich-secrets
-                  key: postgres_password
-            - name: POSTGRES_DB
-              valueFrom:
-                secretKeyRef:
-                  name: immich-secrets
-                  key: postgres_db
-          volumeMounts:
-            - name: immich-psql-pv
-              mountPath: /var/lib/postgresql
           resources:
             requests:
               memory: "512Mi"
@@ -65,12 +58,10 @@ spec:
             limits:
               memory: "1Gi"
               cpu: "500m"
-  volumeClaimTemplates:
-    - metadata:
-        name: immich-psql-pv
-      spec:
-        accessModes: [ "ReadWriteOnce" ]
-        storageClassName: local-path-retain
-        resources:
-          requests:
-            storage: 2Gi
+          volumeMounts:
+            - name: immich-psql-pv
+              mountPath: /var/lib/postgresql/data
+      volumes:
+        - name: immich-psql-pv
+          persistentVolumeClaim:
+            claimName: immich-psql-pvc

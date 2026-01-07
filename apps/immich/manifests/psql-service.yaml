@@ -4,6 +4,7 @@ metadata:
   name: immich-psql-service
   namespace: immich
 spec:
+  clusterIP: None
   selector:
     app: immich-psql
   ports:
