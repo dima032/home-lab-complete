@@ -17,9 +17,9 @@ spec:
       annotations:
         vault.hashicorp.com/agent-inject: "true"
         vault.hashicorp.com/role: "vid2gif-bot-role"
-        vault.hashicorp.com/agent-inject-secret-botsecrets: "kv/vid2gif-bot/data/secrets"
+        vault.hashicorp.com/agent-inject-secret-botsecrets: "kv/vid2gif-bot/secrets"
         vault.hashicorp.com/agent-inject-template-botsecrets: |
-          {{- with secret "kv/vid2gif-bot/data/secrets" -}}
+          {{- with secret "kv/vid2gif-bot/secrets" -}}
           export VIDEO2GIF_BOT_TOKEN="{{ .Data.data.token }}"
           {{- end }}
     spec:

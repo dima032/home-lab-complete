@@ -18,9 +18,9 @@ spec:
         vault.hashicorp.com/agent-inject: "true"
         vault.hashicorp.com/agent-pre-populate-only: "true"
         vault.hashicorp.com/role: "meme-storage-bot-role"
-        vault.hashicorp.com/agent-inject-secret-botsecrets: "kv/meme-storage-bot/data/secret"
+        vault.hashicorp.com/agent-inject-secret-botsecrets: "kv/meme-storage/secrets"
         vault.hashicorp.com/agent-inject-template-botsecrets: |
-          {{- with secret "kv/meme-storage-bot/data/secret" -}}
+          {{- with secret "kv/meme-storage/secrets" -}}
           export TELEGRAM_TOKEN="{{ .Data.data.TELEGRAM_TOKEN }}"
           export ALLOWED_TELEGRAM_IDS="{{ .Data.data.ALLOWED_TELEGRAM_IDS }}"
           export PUBLIC_URL="{{ .Data.data.PUBLIC_URL }}"

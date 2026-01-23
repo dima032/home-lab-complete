@@ -16,9 +16,9 @@ spec:
       annotations:
         vault.hashicorp.com/agent-inject: "true"
         vault.hashicorp.com/role: "immich-role"
-        vault.hashicorp.com/agent-inject-secret-postgres.env: "immich/data/postgres"
+        vault.hashicorp.com/agent-inject-secret-postgres.env: "kv/immich/secrets"
         vault.hashicorp.com/agent-inject-template-postgres.env: |
-          {{- with secret "immich/data/postgres" -}}
+          {{- with secret "kv/immich/secrets" -}}
           export POSTGRES_USER='{{ .Data.data.postgres_user }}'
           export POSTGRES_PASSWORD='{{ .Data.data.postgres_password }}'
           export POSTGRES_DB='{{ .Data.data.postgres_db }}'

@@ -19,9 +19,9 @@ spec:
             vault.hashicorp.com/agent-inject: "true"
             vault.hashicorp.com/agent-pre-populate-only: "true"
             vault.hashicorp.com/role: "reddit-bot-role"
-            vault.hashicorp.com/agent-inject-secret-botsecrets: "kv/reddit-bot/data/secrets"
+            vault.hashicorp.com/agent-inject-secret-botsecrets: "kv/reddit-bot/secrets"
             vault.hashicorp.com/agent-inject-template-botsecrets: |
-              {{- with secret "kv/reddit-bot/data/secrets" -}}
+              {{- with secret "kv/reddit-bot/secrets" -}}
               export TELEGRAM_REDDIT_BOT_TOKEN="{{ .Data.data.tg_reddit_bot_token }}"
               export TELEGRAM_REDDIT_BOT_CHAT_ID="{{ .Data.data.tg_reddit_bot_chat_id }}"
               export SUBREDDIT_LIST="{{ .Data.data.subreddit_list }}"
